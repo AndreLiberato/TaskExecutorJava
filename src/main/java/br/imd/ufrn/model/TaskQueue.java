@@ -6,9 +6,16 @@ import java.util.Queue;
 public class TaskQueue {
 
     private Queue<Task> tasks;
+    private int N;
 
-    public TaskQueue(){
+    public TaskQueue(int N){
+        this.N = N;
+    }
+
+    public void load(int E){
         this.tasks = new LinkedList<>();
+        final long size = (long) Math.pow(10, N);
+
     }
 
     public void add(Task task){

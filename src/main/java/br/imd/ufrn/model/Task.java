@@ -34,14 +34,4 @@ public class Task implements ITask{
     public void execute() {
         System.out.println("Executando ...");
     }
-
-    @Override
-    public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", cost=" + cost +
-                ", type=" + type +
-                ", value=" + value +
-                '}';
-    }
 }

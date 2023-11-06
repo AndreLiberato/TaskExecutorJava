@@ -1,7 +1,10 @@
 package br.imd.ufrn.process;
 
 import br.imd.ufrn.model.ResultQueue;
+import br.imd.ufrn.model.Task;
 import br.imd.ufrn.model.TaskQueue;
+
+import java.util.Queue;
 
 public class Executor implements Runnable{
 
@@ -18,6 +21,15 @@ public class Executor implements Runnable{
 
     @Override
     public void run() {
+        Queue<Task> tasks = taskQueue.getTasks();
 
+        while (!tasks.isEmpty()){
+            tasks.poll();
+        }
+
+    }
+
+    public ResultQueue getResultQueue() {
+        return resultQueue;
     }
 }
