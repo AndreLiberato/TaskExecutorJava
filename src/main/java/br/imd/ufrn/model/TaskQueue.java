@@ -25,16 +25,20 @@ public class TaskQueue {
     }
 
     /**
-     * Carrega a TaskQueue com um número específico de tarefas, geradas aleatoriamente.
+     * Carrega uma fila de tarefas geradas aleatoriamente.
      *
      * @param E O valor E que influencia a probabilidade de uma tarefa ser de escrita.
      */
     public void load(int E){
-        this.tasks = new LinkedList<>();
         final long size = (long) Math.pow(10, N);
+        this.tasks = new LinkedList<>();
 
+        long sizeW = (long) ((E*size) / 100.0);
+        long sizeR = size - sizeW;
+
+        RandomGenerate random = new RandomGenerate(sizeW, sizeR);
         for(long id = 0; id < size; id++){
-            tasks.add(produce(id, E));
+            tasks.add(new Task(id, random.generateCost(), random.getRandomType(), random.generateValue()));
         }
     }
 
@@ -55,17 +59,4 @@ public class TaskQueue {
         return tasks.poll();
     }
 
-    /**
-     * Produz uma tarefa com base no identificador e valor E fornecido.
-     *
-     * @param id O identificador único da tarefa a ser produzida.
-     * @param E  O valor E que influencia a probabilidade de uma tarefa ser de escrita.
-     * @return A tarefa produzida.
-     */
-    private Task produce(long id, int E){
-        int random = new Random().nextInt(100) + 1;
-        Type type = random <= E ? Type.WRITING : Type.READING;
-
-        return new Task(id, RandomGenerate.generateCost(), type, RandomGenerate.generateValue());
-    }
 }

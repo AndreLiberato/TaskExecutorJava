@@ -3,7 +3,12 @@ package br.imd.ufrn.process;
 import br.imd.ufrn.model.ResultQueue;
 import br.imd.ufrn.model.Task;
 import br.imd.ufrn.model.TaskQueue;
+import br.imd.ufrn.utils.SharedFileManager;
 
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -22,13 +27,15 @@ public class Executor implements Runnable {
      * @param T             Número de threads Worker a serem criadas.
      * @param taskQueue     A fila de tarefas a serem executadas pelas threads Worker.
      */
-    public Executor(int T, TaskQueue taskQueue) {
+    public Executor(int T, TaskQueue taskQueue) throws FileNotFoundException {
         this.resultQueue = new ResultQueue();
         this.taskQueue = taskQueue;
         this.workers = new Worker[T];
 
+        SharedFileManager sharedFile = this.buildSharedFileManager(Paths.get(System.getProperty("user.dir")));
+
         for (int i = 0; i < T; i++) {
-            this.workers[i] = new Worker();
+            this.workers[i] = new Worker(sharedFile);
             workers[i].setName("Worker-"+i);
             workers[i].start();
         }
@@ -93,6 +100,19 @@ public class Executor implements Runnable {
         synchronized (idleWorker){
             idleWorker.setTask(task);
             idleWorker.notify();
+        }
+    }
+
+    private SharedFileManager buildSharedFileManager(Path basePath) throws FileNotFoundException {
+        final String RESOURCES_PATH = "src/main/resources/";
+        final String FILE_NAME = "arquivo.txt";
+
+        Path path = basePath.resolve(RESOURCES_PATH);
+
+        if(Files.exists(path.resolve(FILE_NAME))){
+            return new SharedFileManager(path, FILE_NAME);
+        }else {
+            throw new FileNotFoundException("Não foi possível localizar o arquivo compartilhado.");
         }
     }
 

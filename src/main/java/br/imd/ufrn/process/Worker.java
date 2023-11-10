@@ -1,22 +1,46 @@
 package br.imd.ufrn.process;
 
+import br.imd.ufrn.model.Job;
+import br.imd.ufrn.model.Result;
 import br.imd.ufrn.model.Task;
+import br.imd.ufrn.model.Type;
+import br.imd.ufrn.utils.SharedFileManager;
+
+import java.util.Objects;
+
 
 /**
  * A classe Worker representa uma thread que executa tarefas.
  */
-public class Worker extends Thread {
+public class Worker extends Thread implements Job {
 
+    /**
+     * Tarefa atribuída ao Worker
+     */
     private Task task;
+
+    /**
+     * Flag que indica se o Worker está ocioso
+     */
     private volatile boolean isIdle;
+
+    /**
+     * Flag que indica se o Worker deve parar
+     */
     private volatile boolean stop;
+
+    /**
+     * Gerenciador de arquivos compartilhados
+     */
+    private SharedFileManager sharedFile;
 
     /**
      * Construtor que inicializa um Worker com estado inicial ocioso.
      */
-    public Worker() {
+    public Worker(SharedFileManager sharedFile) {
         this.isIdle = true;
         this.stop = false;
+        this.sharedFile = sharedFile;
     }
 
     /**
@@ -32,7 +56,8 @@ public class Worker extends Thread {
                         wait();
                     }
                 }
-                long duration = process();
+
+                this.execute();
             }catch (InterruptedException e){
                 System.err.println("Process error ...");
             }
@@ -42,22 +67,68 @@ public class Worker extends Thread {
     }
 
     /**
-     * Processa a tarefa atribuída, aguardando o tempo especificado em getCost().
+     * Implementa um Job para execução da tarefa atribuída, aguardando o tempo especificado em getCost().
      *
-     * @return A duração total do processamento da tarefa.
      * @throws InterruptedException Se a thread for interrompida durante o processamento.
      */
-    private long process() throws InterruptedException {
+    @Override
+    public void execute() throws InterruptedException {
         try {
             long start = System.currentTimeMillis();
             Thread.sleep((long) (task.getCost() * 1000));
-            task.execute();
-            long end = System.currentTimeMillis();
 
-            return  end - start;
+            System.out.println("Executando "+task.toString()+" ...");
+
+            int value;
+            if(task.getType().equals(Type.READING)){
+                value = processRead();
+            }else{
+                value = processWrite();
+            }
+
+            long end = System.currentTimeMillis();
+            //new Result(task.getId(), value, (end - start));
         }finally {
             isIdle = true;
         }
+    }
+
+    /**
+     * Realiza o processamento de uma operação de escrita no arquivo compartilhado.
+     *
+     * @return O valor resultante da operação.
+     */
+    private int processWrite() {
+        System.out.println("Escrevendo ...");
+
+        int value = processRead();
+        synchronized (sharedFile){
+            value += task.getValue();
+            sharedFile.writeToFile(String.valueOf(value));
+        }
+
+        System.out.println("Valor após escrita: "+value);
+        return value;
+    }
+
+    /**
+     * Realiza o processamento de uma operação de leitura no arquivo compartilhado.
+     *
+     * @return O valor lido.
+     */
+    private int processRead() {
+        System.out.println("Lendo ...");
+
+        int value = 0;
+        synchronized (sharedFile){
+            String content = sharedFile.readFromFile();
+            if(Objects.nonNull(content) && !content.isEmpty()){
+                value = Integer.parseInt(content);
+            }
+        }
+
+        System.out.println("Valor: "+value);
+        return value;
     }
 
     /**

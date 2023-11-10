@@ -1,11 +1,9 @@
 package br.imd.ufrn.model;
 
-import java.util.Objects;
-
 /**
  * A classe Task representa uma tarefa a ser executada por um Worker.
  */
-public class Task implements ITask{
+public class Task {
 
     private long id;
     private float cost;
@@ -42,18 +40,6 @@ public class Task implements ITask{
 
     public int getValue() {
         return value;
-    }
-
-    /**
-     * Executa a tarefa...
-     */
-    @Override
-    public synchronized void execute() {
-        if(Objects.equals(type, Type.READING)){
-            System.out.println("\nExecutando leitura --> "+this);
-        }else{
-            System.out.println("\nExecutando escrita --> "+this);
-        }
     }
 
     @Override
