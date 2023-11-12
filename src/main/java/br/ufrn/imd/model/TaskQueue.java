@@ -1,19 +1,18 @@
-package br.imd.ufrn.model;
+package br.ufrn.imd.model;
 
-import br.imd.ufrn.utils.RandomGenerate;
+import br.ufrn.imd.utils.RandomGenerate;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Random;
 
 /**
  * A classe TaskQueue representa uma fila de tarefas a serem executadas por threads Worker.
- * Ela suporta operações de carregamento de tarefas, adição de tarefas, obtenção de tarefas e produção de tarefas.
+ * Ela suporta operações de carregamento de tarefas, obtenção de tarefas e produção de tarefas.
  */
 public class TaskQueue {
 
-    private Queue<Task> tasks;
-    private int N;
+    private Queue<Task> tasks;  // Fila de tarefas
+    private int N;              // Valor associado à TaskQueue
 
     /**
      * Construtor para criar uma TaskQueue com um determinado valor N.
@@ -42,10 +41,11 @@ public class TaskQueue {
         }
     }
 
-    public void add(Task task){
-        tasks.add(task);
-    }
-
+    /**
+     * Obtém a fila de tarefas.
+     *
+     * @return A fila de tarefas.
+     */
     public Queue<Task> getTasks() {
         return tasks;
     }
