@@ -1,15 +1,14 @@
-package br.imd.ufrn.model;
+package br.ufrn.imd.model;
 
 /**
  * A classe Task representa uma tarefa a ser executada por um Worker.
  */
 public class Task {
 
-    private long id;
-    private float cost;
-    private Type type;
-    private int value;
-
+    private long id;         // Identificador único da tarefa.
+    private float cost;      // Custo estimado da execução da tarefa.
+    private Type type;       // Tipo da tarefa (leitura ou escrita).
+    private int value;       // Valor associado à tarefa.
 
     /**
      * Construtor para criar uma instância de Task.
@@ -42,13 +41,14 @@ public class Task {
         return value;
     }
 
+    /**
+     * Sobrescreve o método toString para fornecer uma representação de string da instância da classe.
+     *
+     * @return Uma string representando a tarefa.
+     */
     @Override
     public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", cost=" + cost +
-                ", type=" + type +
-                ", value=" + value +
-                '}';
+        System.out.println("----------------------------------------------------------");
+        return "Task [id="+ id +", cost="+ cost +", type="+ type +", value="+ value +"]";
     }
 }

@@ -1,6 +1,6 @@
-package br.imd.ufrn.utils;
+package br.ufrn.imd.utils;
 
-import br.imd.ufrn.model.Type;
+import br.ufrn.imd.model.Type;
 
 import java.util.Objects;
 import java.util.Random;
@@ -10,30 +10,9 @@ import java.util.Random;
  */
 public class RandomGenerate {
 
-    /**
-     * O número total de tarefas do tipo WRITING.
-     */
-    private volatile long totalW;
-
-    /**
-     * O número total de tarefas do tipo READING.
-     */
-    private volatile long totalR;
-
-    /**
-     * O custo percentual para tarefas geradas.
-     */
-    private float percentCost;
-
-    /**
-     * O valor máximo para tarefas geradas.
-     */
-    private int maxValue;
-
-    /**
-     * O gerador de números aleatórios.
-     */
-    private Random random;
+    private volatile long totalW;   // O número total de tarefas do tipo de escrita (WRITING).
+    private volatile long totalR;   // O número total de tarefas do tipo de leitura (READING).
+    private Random random;          // O gerador de números aleatórios.
 
     /**
      * Constrói um novo objeto RandomGenerate com os contadores totais especificados para WRITING e READING.
@@ -44,27 +23,25 @@ public class RandomGenerate {
     public RandomGenerate(long totalW, long totalR) {
         this.totalW = totalW;
         this.totalR = totalR;
-        this.percentCost = 0.01f;
-        this.maxValue = 10;
         this.random = new Random();
     }
 
     /**
-     * Gera um custo aleatório para uma tarefa.
+     * Gera um custo variado de (0 a 0.01) de execução para uma tarefa.
      *
      * @return O custo gerado aleatoriamente.
      */
     public float generateCost() {
-        return random.nextFloat() * percentCost;
+        return random.nextFloat() * 0.01f;
     }
 
     /**
-     * Gera um valor aleatório para uma tarefa.
+     * Gera um valor aleatório de 0 a 10 para uma tarefa.
      *
      * @return O valor gerado aleatoriamente.
      */
     public int generateValue() {
-        return random.nextInt(maxValue) + 1;
+        return random.nextInt(10) + 1;
     }
 
     /**

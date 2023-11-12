@@ -1,10 +1,7 @@
-package br.imd.ufrn.process;
+package br.ufrn.imd.process;
 
-import br.imd.ufrn.model.Job;
-import br.imd.ufrn.model.Result;
-import br.imd.ufrn.model.Task;
-import br.imd.ufrn.model.Type;
-import br.imd.ufrn.utils.SharedFileManager;
+import br.ufrn.imd.model.*;
+import br.ufrn.imd.utils.SharedFileManager;
 
 import java.util.Objects;
 
@@ -14,33 +11,24 @@ import java.util.Objects;
  */
 public class Worker extends Thread implements Job {
 
-    /**
-     * Tarefa atribuída ao Worker
-     */
-    private Task task;
 
-    /**
-     * Flag que indica se o Worker está ocioso
-     */
-    private volatile boolean isIdle;
-
-    /**
-     * Flag que indica se o Worker deve parar
-     */
-    private volatile boolean stop;
-
-    /**
-     * Gerenciador de arquivos compartilhados
-     */
-    private SharedFileManager sharedFile;
+    private ResultQueue resultQueue;        // A fila de resultados produzidos através da execução das tarefas
+    private Task task;                      // Tarefa atribuída ao Worker
+    private volatile boolean isIdle;        // Flag que indica se o Worker está ocioso
+    private volatile boolean stop;          // Flag que indica se o Worker deve parar
+    private SharedFileManager sharedFile;   // Gerenciador de arquivo compartilhado
 
     /**
      * Construtor que inicializa um Worker com estado inicial ocioso.
+     *
+     * @param sharedFile   O gerenciador de arquivo compartilhado.
+     * @param resultQueue  A fila de resultados instanciada no Executor para armazenar os resultados das tarefas executadas pelo Worker.
      */
-    public Worker(SharedFileManager sharedFile) {
+    public Worker(SharedFileManager sharedFile, ResultQueue resultQueue) {
         this.isIdle = true;
         this.stop = false;
         this.sharedFile = sharedFile;
+        this.resultQueue = resultQueue;
     }
 
     /**
@@ -87,7 +75,7 @@ public class Worker extends Thread implements Job {
             }
 
             long end = System.currentTimeMillis();
-            //new Result(task.getId(), value, (end - start));
+            resultQueue.add(new Result(task.getId(), value, (end - start)));
         }finally {
             isIdle = true;
         }
@@ -127,7 +115,7 @@ public class Worker extends Thread implements Job {
             }
         }
 
-        System.out.println("Valor: "+value);
+        System.out.println("Valor lido: "+value);
         return value;
     }
 

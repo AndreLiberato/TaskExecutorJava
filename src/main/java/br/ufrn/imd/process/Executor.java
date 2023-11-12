@@ -1,14 +1,11 @@
-package br.imd.ufrn.process;
+package br.ufrn.imd.process;
 
-import br.imd.ufrn.model.ResultQueue;
-import br.imd.ufrn.model.Task;
-import br.imd.ufrn.model.TaskQueue;
-import br.imd.ufrn.utils.SharedFileManager;
+import br.ufrn.imd.model.ResultQueue;
+import br.ufrn.imd.model.Task;
+import br.ufrn.imd.model.TaskQueue;
+import br.ufrn.imd.utils.SharedFileManager;
 
 import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -17,25 +14,25 @@ import java.util.Random;
  */
 public class Executor implements Runnable {
 
-    private TaskQueue taskQueue;
-    private ResultQueue resultQueue;
-    private Worker[] workers;
+    private TaskQueue taskQueue;        // Fila de tarefas a serem executadas pelas threads Worker.
+    private ResultQueue resultQueue;    // Fila de resultados produzidos pelas threads Worker.
+    private Worker[] workers;           // Array de threads Worker.
 
     /**
      * Construtor para criar um Executor com um número específico de threads Worker.
      *
      * @param T             Número de threads Worker a serem criadas.
      * @param taskQueue     A fila de tarefas a serem executadas pelas threads Worker.
+     * @throws FileNotFoundException Se o arquivo compartilhado não for encontrado.
      */
     public Executor(int T, TaskQueue taskQueue) throws FileNotFoundException {
         this.resultQueue = new ResultQueue();
         this.taskQueue = taskQueue;
         this.workers = new Worker[T];
 
-        SharedFileManager sharedFile = this.buildSharedFileManager(Paths.get(System.getProperty("user.dir")));
-
+        SharedFileManager sharedFile = new SharedFileManager();
         for (int i = 0; i < T; i++) {
-            this.workers[i] = new Worker(sharedFile);
+            this.workers[i] = new Worker(sharedFile, resultQueue);
             workers[i].setName("Worker-"+i);
             workers[i].start();
         }
@@ -61,9 +58,10 @@ public class Executor implements Runnable {
                 }
             }
 
-            assignTaskToWorker(idleWorker, task);
+            assignTaskToWorker(idleWorker, task); // Atribui a tarefa ao Worker disponível
         }
 
+        // Encerra as threads Worker após a conclusão das tarefas
         for (Worker worker : workers) {
             worker.stopJob();
         }
@@ -103,18 +101,8 @@ public class Executor implements Runnable {
         }
     }
 
-    private SharedFileManager buildSharedFileManager(Path basePath) throws FileNotFoundException {
-        final String RESOURCES_PATH = "src/main/resources/";
-        final String FILE_NAME = "arquivo.txt";
-
-        Path path = basePath.resolve(RESOURCES_PATH);
-
-        if(Files.exists(path.resolve(FILE_NAME))){
-            return new SharedFileManager(path, FILE_NAME);
-        }else {
-            throw new FileNotFoundException("Não foi possível localizar o arquivo compartilhado.");
-        }
+    public ResultQueue getResultQueue() {
+        return resultQueue;
     }
-
 }
 

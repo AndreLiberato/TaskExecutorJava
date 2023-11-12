@@ -1,4 +1,4 @@
-package br.imd.ufrn.model;
+package br.ufrn.imd.model;
 
 /**
     Constante que representa o tipo da tarefa.
@@ -7,7 +7,7 @@ public enum Type {
     READING(0),
     WRITING(1);
 
-    private int id;
+    private final int id;
 
     Type(int id) {
         this.id = id;
