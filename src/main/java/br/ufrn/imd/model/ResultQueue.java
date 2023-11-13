@@ -27,10 +27,11 @@ public class ResultQueue {
         results.add(result);
     }
 
-    public Queue<Result> getResults() {
-        return results;
-    }
-
+    /**
+     * Calcula o tempo de execução total do processamento realizando a soma do processamento de cada tarefa.
+     *
+     * @return tempo total do processamento do conjunto de tarefas.
+     */
     public long getTotalExecutionTime(){
         long msTotal = results.stream().map(Result::ms).reduce(0L, Long::sum);
         return msTotal;

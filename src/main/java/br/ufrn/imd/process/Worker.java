@@ -50,8 +50,6 @@ public class Worker extends Thread implements Job {
                 System.err.println("Process error ...");
             }
         } while (!stop && isIdle);
-
-        System.out.println(this.getName() + " finalizado ...");
     }
 
     /**
@@ -65,8 +63,6 @@ public class Worker extends Thread implements Job {
             long start = System.currentTimeMillis();
             Thread.sleep((long) (task.getCost() * 1000));
 
-            System.out.println("Executando "+task.toString()+" ...");
-
             int value;
             if(task.getType().equals(Type.READING)){
                 value = processRead();
@@ -75,6 +71,7 @@ public class Worker extends Thread implements Job {
             }
 
             long end = System.currentTimeMillis();
+
             resultQueue.add(new Result(task.getId(), value, (end - start)));
         }finally {
             isIdle = true;
@@ -87,15 +84,11 @@ public class Worker extends Thread implements Job {
      * @return O valor resultante da operação.
      */
     private int processWrite() {
-        System.out.println("Escrevendo ...");
-
         int value = processRead();
         synchronized (sharedFile){
             value += task.getValue();
             sharedFile.writeToFile(String.valueOf(value));
         }
-
-        System.out.println("Valor após escrita: "+value);
         return value;
     }
 
@@ -105,8 +98,6 @@ public class Worker extends Thread implements Job {
      * @return O valor lido.
      */
     private int processRead() {
-        System.out.println("Lendo ...");
-
         int value = 0;
         synchronized (sharedFile){
             String content = sharedFile.readFromFile();
@@ -114,8 +105,6 @@ public class Worker extends Thread implements Job {
                 value = Integer.parseInt(content);
             }
         }
-
-        System.out.println("Valor lido: "+value);
         return value;
     }
 

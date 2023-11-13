@@ -32,7 +32,7 @@ public class TaskQueue {
         final long size = (long) Math.pow(10, N);
         this.tasks = new LinkedList<>();
 
-        long sizeW = (long) ((E*size) / 100.0);
+        long sizeW = (long) ((E / 100f) * 100);
         long sizeR = size - sizeW;
 
         RandomGenerate random = new RandomGenerate(sizeW, sizeR);

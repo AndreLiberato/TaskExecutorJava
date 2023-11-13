@@ -12,7 +12,7 @@ Esse comando criará um arquivo `.jar` no diretório `./target/TaskExecutorJava-
 ## Como executar
 
 ```
-java -cp ./target/TaskExecutorJava-1.0.jar br.ufrn.imd.Main [N] [E] [T]
+java -jar ./target/TaskExecutor-1.0.jar [N] [E] [T]
 ```
 
 Sendo `N` aplicado a 10^N elementos, `E` fator probabilístico de uma tarefa ser de escrita e `T` o número de threads criada.
