@@ -18,16 +18,16 @@ public class Main {
      * @throws FileNotFoundException Se o arquivo de entrada não puder ser encontrado durante o carregamento inicial de tarefas.
      */
     public static void main(String[] args) throws FileNotFoundException, InterruptedException {
-        int N = 1, T = 1, E = 3;
+        int N = 0, T = 0, E = 0;
 
-        /*try {
+        try {
             N = Integer.parseInt(args[0]);
             E = Integer.parseInt(args[1]);
             T = Integer.parseInt(args[2]);
         } catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
             System.err.println("Argument must be an integer.");
             System.exit(1);
-        }*/
+        }
 
         TaskQueue taskQueue = new TaskQueue(N);
         taskQueue.load(E);
@@ -35,10 +35,12 @@ public class Main {
         Executor executor = new Executor(T, taskQueue);
         Thread thread = new Thread(executor, "Executor");
         thread.start();
-
         thread.join();
 
-        long ms = executor.getResultQueue().getTotalExecutionTime();
-        System.out.println("Tempo total de execução: " + ms +" ms");
+        long totalTime = executor.getResultQueue().getTotalExecutionTime();
+
+        System.out.println("---------------------------------------------------------------------------");
+        System.out.printf(">> Para N = %d, E = %d e T = %d o tempo total de processamento foi %d ms. \n", N, E, T, totalTime);
+        System.out.println("---------------------------------------------------------------------------");
     }
 }

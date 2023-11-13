@@ -41,7 +41,7 @@ public class RandomGenerate {
      * @return O valor gerado aleatoriamente.
      */
     public int generateValue() {
-        return random.nextInt(10) + 1;
+        return random.nextInt(11);
     }
 
     /**

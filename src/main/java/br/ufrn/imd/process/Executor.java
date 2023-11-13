@@ -44,6 +44,8 @@ public class Executor implements Runnable {
      */
     @Override
     public void run() {
+        System.out.println("Processando ...");
+
         while (!taskQueue.getTasks().isEmpty()) {
             Task task = taskQueue.getNextTask();
             Worker idleWorker = getIdleWorker();
@@ -64,17 +66,24 @@ public class Executor implements Runnable {
         // Encerra as threads Worker após a conclusão das tarefas
         for (Worker worker : workers) {
             worker.stopJob();
+            try {
+                worker.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
+
+        System.out.println("Processamento finalizado!");
     }
 
     /**
-     * Aguarda um tempo aleatório de 1 a 1000 milissegundos até que um Worker esteja disponível.
+     * Aguarda um tempo aleatório de 1 a 15 milissegundos até que um Worker esteja disponível.
      *
      * @throws InterruptedException Se a espera for interrompida.
      */
     private void waitUntilWorkerAvailable() throws InterruptedException {
         synchronized (this){
-            int randomMsTime = new Random().nextInt(1000) + 1;
+            int randomMsTime = new Random().nextInt(100) + 1;
             wait(randomMsTime);
         }
     }
