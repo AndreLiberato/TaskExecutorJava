@@ -7,7 +7,7 @@ import br.ufrn.imd.utils.SharedFileManager;
 
 import java.io.FileNotFoundException;
 import java.util.Arrays;
-import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 /**
  * O Executor é responsável por coordenar a execução de tarefas entre várias threads Worker.
@@ -17,6 +17,7 @@ public class Executor implements Runnable {
     private TaskQueue taskQueue;        // Fila de tarefas a serem executadas pelas threads Worker.
     private ResultQueue resultQueue;    // Fila de resultados produzidos pelas threads Worker.
     private Worker[] workers;           // Array de threads Worker.
+    private Semaphore semaphore;        // Semáforo para controlar a atribuição de tarefas aos Workers.
 
     /**
      * Construtor para criar um Executor com um número específico de threads Worker.
@@ -30,61 +31,61 @@ public class Executor implements Runnable {
         this.taskQueue = taskQueue;
         this.workers = new Worker[T];
 
+        this.semaphore = new Semaphore(T); // Inicializa o Semaphore com um número de permissões igual ao número de threads Worker.
+
         SharedFileManager sharedFile = new SharedFileManager();
         for (int i = 0; i < T; i++) {
-            this.workers[i] = new Worker(sharedFile, resultQueue);
+            this.workers[i] = new Worker(sharedFile, resultQueue, semaphore);
             workers[i].setName("Worker-"+i);
             workers[i].start();
         }
     }
 
     /**
-     * O método run é chamado quando o Executor é executado como uma thread.
-     * Ele coordena a execução de tarefas entre as threads Worker.
+     * Método responsável por coordenar a execução de tarefas entre as threads Worker.
+     *
+     * Ele adquire permissões do semáforo para controlar a atribuição de tarefas aos Workers. Enquanto houver tarefas na fila,
+     * identifica um Worker ocioso, atribui uma tarefa e inicia sua execução. Ao finalizar as tarefas, encerra as threads Worker.
      */
     @Override
     public void run() {
         System.out.println("Processando ...");
 
         while (!taskQueue.getTasks().isEmpty()) {
-            Task task = taskQueue.getNextTask();
-            Worker idleWorker = getIdleWorker();
-
-            while (idleWorker == null){
-                try {
-                    waitUntilWorkerAvailable();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }finally {
-                    idleWorker = getIdleWorker();
-                }
-            }
-
-            assignTaskToWorker(idleWorker, task); // Atribui a tarefa ao Worker disponível
-        }
-
-        // Encerra as threads Worker após a conclusão das tarefas
-        for (Worker worker : workers) {
-            worker.stopJob();
             try {
-                worker.join();
+                semaphore.acquire();
+                Worker idleWorker = getIdleWorker();
+
+                if (idleWorker != null) {
+                    Task task = taskQueue.getNextTask();
+                    assignTaskToWorker(idleWorker, task);
+                }else{
+                    semaphore.release();
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+
+        }
+
+        try {
+            stopWorkers();
+        } catch (InterruptedException e) {
+            System.err.println("Erro no encerramento dos workers: "+e.getMessage());
         }
 
         System.out.println("Processamento finalizado!");
     }
 
     /**
-     * Aguarda um tempo aleatório de 1 a 15 milissegundos até que um Worker esteja disponível.
+     * Encerra a execução das threads Worker.
      *
-     * @throws InterruptedException Se a espera for interrompida.
+     * @throws InterruptedException Se ocorrer um erro durante a interrupção das threads.
      */
-    private void waitUntilWorkerAvailable() throws InterruptedException {
-        synchronized (this){
-            int randomMsTime = new Random().nextInt(100) + 1;
-            wait(randomMsTime);
+    private void stopWorkers() throws InterruptedException {
+        for (Worker worker : workers) {
+            worker.stopJob();
+            worker.join();
         }
     }
 
@@ -94,7 +95,12 @@ public class Executor implements Runnable {
      * @return Um Worker ocioso, ou null se nenhum estiver disponível.
      */
     private Worker getIdleWorker() {
-        return Arrays.stream(workers).filter(Worker::isIdle).findFirst().orElse(null);
+        synchronized (this) {
+            return Arrays.stream(workers)
+                    .filter(Worker::isIdle)
+                    .findFirst()
+                    .orElse(null);
+        }
     }
 
     /**

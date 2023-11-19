@@ -4,6 +4,7 @@ import br.ufrn.imd.model.*;
 import br.ufrn.imd.utils.SharedFileManager;
 
 import java.util.Objects;
+import java.util.concurrent.Semaphore;
 
 
 /**
@@ -17,18 +18,21 @@ public class Worker extends Thread implements Job {
     private volatile boolean isIdle;        // Flag que indica se o Worker está ocioso
     private volatile boolean stop;          // Flag que indica se o Worker deve parar
     private SharedFileManager sharedFile;   // Gerenciador de arquivo compartilhado
+    private Semaphore semaphore;            // Semáforo para o controle do Executor.
 
     /**
      * Construtor que inicializa um Worker com estado inicial ocioso.
      *
      * @param sharedFile   O gerenciador de arquivo compartilhado.
      * @param resultQueue  A fila de resultados instanciada no Executor para armazenar os resultados das tarefas executadas pelo Worker.
+     * @param semaphore    O semáforo para controle do Executor.
      */
-    public Worker(SharedFileManager sharedFile, ResultQueue resultQueue) {
+    public Worker(SharedFileManager sharedFile, ResultQueue resultQueue, Semaphore semaphore) {
         this.isIdle = true;
         this.stop = false;
         this.sharedFile = sharedFile;
         this.resultQueue = resultQueue;
+        this.semaphore = semaphore;
     }
 
     /**
@@ -37,20 +41,20 @@ public class Worker extends Thread implements Job {
      */
     @Override
     public void run() {
-        do{
+        while (!this.stop) {
             try {
-                while (isIdle && !stop) {
-                    synchronized (this) {
-                        wait();
+                synchronized (this) {
+                    while (this.isIdle && !this.stop) {
+                        this.wait();
                     }
                 }
-
                 this.execute();
-            }catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 System.err.println("Process error ...");
             }
-        } while (!stop && isIdle);
+        }
     }
+
 
     /**
      * Implementa um Job para execução da tarefa atribuída, aguardando o tempo especificado em getCost().
@@ -61,10 +65,11 @@ public class Worker extends Thread implements Job {
     public void execute() throws InterruptedException {
         try {
             long start = System.currentTimeMillis();
-            Thread.sleep((long) (task.getCost() * 1000));
+
+            sleep(0L, (int) (task.getCost() * 1_000_000));
 
             int value;
-            if(task.getType().equals(Type.READING)){
+            if(this.task.getType().equals(Type.READING)){
                 value = processRead();
             }else{
                 value = processWrite();
@@ -72,9 +77,10 @@ public class Worker extends Thread implements Job {
 
             long end = System.currentTimeMillis();
 
-            resultQueue.add(new Result(task.getId(), value, (end - start)));
+            this.resultQueue.add(new Result(this.task.getId(), value, (end - start)));
         }finally {
-            isIdle = true;
+            this.semaphore.release();
+            this.isIdle = true;
         }
     }
 
@@ -85,9 +91,9 @@ public class Worker extends Thread implements Job {
      */
     private int processWrite() {
         int value = processRead();
-        synchronized (sharedFile){
-            value += task.getValue();
-            sharedFile.writeToFile(String.valueOf(value));
+        synchronized (this.sharedFile){
+            value += this.task.getValue();
+            this.sharedFile.writeToFile(String.valueOf(value));
         }
         return value;
     }
@@ -99,8 +105,8 @@ public class Worker extends Thread implements Job {
      */
     private int processRead() {
         int value = 0;
-        synchronized (sharedFile){
-            String content = sharedFile.readFromFile();
+        synchronized (this.sharedFile){
+            String content = this.sharedFile.readFromFile();
             if(Objects.nonNull(content) && !content.isEmpty()){
                 value = Integer.parseInt(content);
             }
@@ -115,7 +121,7 @@ public class Worker extends Thread implements Job {
      */
     public void setTask(Task task) {
         this.task = task;
-        isIdle = false;
+        this.isIdle = false;
     }
 
     /**
@@ -131,9 +137,10 @@ public class Worker extends Thread implements Job {
      * Instrui o Worker a parar quando não há mais tarefas para serem executadas.
      */
     public void stopJob() {
-        stop = true;
         synchronized (this){
+            this.stop = true;
             notify();
         }
     }
+
 }

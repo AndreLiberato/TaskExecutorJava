@@ -29,18 +29,24 @@ public class Main {
             System.exit(1);
         }
 
+        long msI = System.currentTimeMillis();
         TaskQueue taskQueue = new TaskQueue(N);
         taskQueue.load(E);
 
+        long msB = System.currentTimeMillis();
         Executor executor = new Executor(T, taskQueue);
         Thread thread = new Thread(executor, "Executor");
         thread.start();
         thread.join();
+        long msF = System.currentTimeMillis();
 
-        long totalTime = executor.getResultQueue().getTotalExecutionTime();
+        long processSum = executor.getResultQueue().getTotalExecutionTime();
 
         System.out.println("---------------------------------------------------------------------------");
-        System.out.printf(">> Para N = %d, E = %d e T = %d o tempo total de processamento foi %d ms. \n", N, E, T, totalTime);
+        System.out.printf(">>>>>>>>>>> Tempos de execução para N = %d, E = %d e T = %d: <<<<<<<<<<\n", N, E, T);
+        System.out.printf(">>> Processamento Geral: %d ms. \n", (msF - msB));
+        System.out.printf(">>> Soma dos Processamento: %d ms. \n", processSum);
+        System.out.printf(">>> Execução Geral: %d ms. \n", (msF - msI));
         System.out.println("---------------------------------------------------------------------------");
     }
 }

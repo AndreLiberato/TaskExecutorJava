@@ -12,7 +12,7 @@ public class RandomGenerate {
 
     private volatile long totalW;   // O número total de tarefas do tipo de escrita (WRITING).
     private volatile long totalR;   // O número total de tarefas do tipo de leitura (READING).
-    private Random random;          // O gerador de números aleatórios.
+    private final Random random;    // O gerador de números aleatórios.
 
     /**
      * Constrói um novo objeto RandomGenerate com os contadores totais especificados para WRITING e READING.
@@ -32,7 +32,7 @@ public class RandomGenerate {
      * @return O custo gerado aleatoriamente.
      */
     public float generateCost() {
-        return random.nextFloat() * 0.01f;
+        return (float) (random.nextInt(101) / 10000.0);
     }
 
     /**
