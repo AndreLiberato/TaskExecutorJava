@@ -32,8 +32,11 @@ public class ResultQueue {
      *
      * @return tempo total do processamento do conjunto de tarefas.
      */
-    public synchronized long getTotalExecutionTime(){
-        long msTotal = results.stream().map(Result::ms).reduce(0L, Long::sum);
+    public long getTotalExecutionTime(){
+        long msTotal = 0;
+        for(Result result : results){
+            msTotal+=result.ms();
+        }
         return msTotal;
     }
 

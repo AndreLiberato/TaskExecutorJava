@@ -6,7 +6,6 @@ import br.ufrn.imd.model.TaskQueue;
 import br.ufrn.imd.utils.SharedFileManager;
 
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -84,7 +83,7 @@ public class Executor implements Runnable {
      */
     private void stopWorkers() throws InterruptedException {
         for (Worker worker : workers) {
-            worker.stopJob();
+            worker.pause();
             worker.join();
         }
     }
@@ -95,12 +94,12 @@ public class Executor implements Runnable {
      * @return Um Worker ocioso, ou null se nenhum estiver disponível.
      */
     private Worker getIdleWorker() {
-        synchronized (this) {
-            return Arrays.stream(workers)
-                    .filter(Worker::isIdle)
-                    .findFirst()
-                    .orElse(null);
+        for(Worker worker : workers){
+            if(worker.isIdle()){
+                return worker;
+            }
         }
+        return null;
     }
 
     /**

@@ -29,6 +29,7 @@ public class TaskQueue {
      * @param E O valor E que influencia a probabilidade de uma tarefa ser de escrita.
      */
     public void load(int E){
+        System.out.println("Carregando ...");
         final long size = (long) Math.pow(10, N);
         this.tasks = new LinkedList<>();
 

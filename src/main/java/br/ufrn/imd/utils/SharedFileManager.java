@@ -4,6 +4,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * A classe SharedFileManager é responsável por gerenciar operações de leitura e escrita em um arquivo compartilhado.
@@ -11,6 +13,8 @@ import java.nio.file.Paths;
 public class SharedFileManager {
 
     private File file; // Arquivo compartilhado
+
+    private ReadWriteLock lock;
 
     // Constantes para o caminho e nome do arquivo
     private final String RESOURCES_PATH = "src/main/resources/";
@@ -22,19 +26,24 @@ public class SharedFileManager {
      * @throws FileNotFoundException Se o arquivo compartilhado não for encontrado.
      */
     public SharedFileManager() throws FileNotFoundException {
+        this.lock = new ReentrantReadWriteLock();
         initFile();
     }
+
 
     /**
      * Escreve o conteúdo especificado no arquivo compartilhado.
      *
-     * @param content O conteúdo a ser escrito no arquivo.
+     * @param value O conteúdo a ser escrito no arquivo.
      */
-    public synchronized void writeToFile(String content) {
+    public void writeToFile(int value) {
+        lock.writeLock().lock();
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
-            bw.write(content);
+            bw.write(String.valueOf(value));
         } catch (IOException e) {
             System.err.println("Erro de escrita no arquivo: " + e.getMessage());
+        }finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -43,9 +52,9 @@ public class SharedFileManager {
      *
      * @return O conteúdo lido do arquivo como uma string.
      */
-    public synchronized String readFromFile() {
+    public String readFromFile() {
+        lock.readLock().lock();
         StringBuilder content = new StringBuilder();
-
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -53,6 +62,8 @@ public class SharedFileManager {
             }
         } catch (IOException e) {
             System.err.println("Erro na leitura do arquivo: " + e.getMessage());
+        }finally {
+            lock.readLock().unlock();
         }
 
         return content.toString();
