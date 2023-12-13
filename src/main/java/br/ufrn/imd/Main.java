@@ -44,7 +44,7 @@ public class Main {
 
         System.out.println("---------------------------------------------------------------------------");
         System.out.printf(">>>>>>>>>>> Tempos de execução para N = %d, E = %d e T = %d: <<<<<<<<<<\n", N, E, T);
-        System.out.printf(">>> Processamento Geral: %d ms. \n", (msF - msB));
+        System.out.printf(">>> Processamento das Tarefas: %d ms. \n", (msF - msB));
         System.out.printf(">>> Soma dos Processamento: %d ms. \n", processSum);
         System.out.printf(">>> Execução Geral: %d ms. \n", (msF - msI));
         System.out.println("---------------------------------------------------------------------------");

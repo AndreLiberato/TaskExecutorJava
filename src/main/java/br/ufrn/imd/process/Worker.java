@@ -3,8 +3,9 @@ package br.ufrn.imd.process;
 import br.ufrn.imd.model.*;
 import br.ufrn.imd.utils.SharedFileManager;
 
-import java.util.Objects;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -41,16 +42,15 @@ public class Worker extends Thread implements Job {
      */
     @Override
     public void run() {
+        Lock lock = new ReentrantLock();
         while (!this.stop) {
             try {
-                synchronized (this) {
-                    while (this.isIdle && !this.stop) {
-                        this.wait();
-                    }
-                }
-                this.execute();
+                lock.lock();
+                if(task != null) this.execute();
             } catch (InterruptedException e) {
                 System.err.println("Process error ...");
+            }finally {
+                lock.unlock();
             }
         }
     }
@@ -66,10 +66,10 @@ public class Worker extends Thread implements Job {
         try {
             long start = System.currentTimeMillis();
 
-            sleep(0L, (int) (task.getCost() * 1_000_000));
+            sleep(0L, (int) (task.cost() * 1_000_000));
 
             int value;
-            if(this.task.getType().equals(Type.READING)){
+            if(task.type().equals(Type.READING)){
                 value = processRead();
             }else{
                 value = processWrite();
@@ -77,10 +77,10 @@ public class Worker extends Thread implements Job {
 
             long end = System.currentTimeMillis();
 
-            this.resultQueue.add(new Result(this.task.getId(), value, (end - start)));
+            this.resultQueue.add(new Result(task.id(), value, (end - start)));
         }finally {
-            this.semaphore.release();
             this.isIdle = true;
+            this.semaphore.release();
         }
     }
 
@@ -91,10 +91,10 @@ public class Worker extends Thread implements Job {
      */
     private int processWrite() {
         int value = processRead();
-        synchronized (this.sharedFile){
-            value += this.task.getValue();
-            this.sharedFile.writeToFile(String.valueOf(value));
-        }
+        value += task.value();
+
+        sharedFile.writeToFile(value);
+
         return value;
     }
 
@@ -104,14 +104,7 @@ public class Worker extends Thread implements Job {
      * @return O valor lido.
      */
     private int processRead() {
-        int value = 0;
-        synchronized (this.sharedFile){
-            String content = this.sharedFile.readFromFile();
-            if(Objects.nonNull(content) && !content.isEmpty()){
-                value = Integer.parseInt(content);
-            }
-        }
-        return value;
+        return Integer.parseInt(sharedFile.readFromFile());
     }
 
     /**
@@ -136,11 +129,8 @@ public class Worker extends Thread implements Job {
     /**
      * Instrui o Worker a parar quando não há mais tarefas para serem executadas.
      */
-    public void stopJob() {
-        synchronized (this){
-            this.stop = true;
-            notify();
-        }
+    public void pause() {
+        this.stop = true;
     }
 
 }
